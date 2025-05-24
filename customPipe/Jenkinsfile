@@ -41,12 +41,26 @@ pipeline {
             }
         }
 
+        
+        // This stage is used to clone the repository containing the project manually if you are not using a Jenkinsfile from SCM
+        // If you are using a Jenkinsfile from SCM, this stage can be removed
+
         stage("Clone Repo") {
             steps {
                 echo "Cloning Repository..."
                 git 'https://github.com/jenkins-docs/simple-java-maven-app.git'
             }
         }
+
+        // This stage is used to checkout the SCM repository if you are using a Jenkinsfile from SCM
+        // If you are not using a Jenkinsfile from SCM, this stage can be removed
+        // If you are using a Jenkinsfile from SCM, this stage will automatically checkout the repository
+        /* stage("Checkout") {
+            steps {
+            echo "Checking out SCM..."
+            checkout scm
+            }
+        } */
 
         stage("Build") {
             steps {
