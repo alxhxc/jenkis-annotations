@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        
+
         choice(
             name: 'MAVEN_VERSION',
             choices: ['M3'],
@@ -89,7 +89,7 @@ pipeline {
             steps {
                 script {
                     def userChoice = input(
-                        message: "You are about to deploy to ${params.ENVIRONMENT} the '${params.VERSION}'. Select Yes/No to continue:",
+                        message: "You are about to deploy to ${params.ENVIRONMENT} the '${params.VERSION}' version. Select Yes/No to continue:",
                         parameters: [
                             choice(
                                 name: 'Confirmation',
