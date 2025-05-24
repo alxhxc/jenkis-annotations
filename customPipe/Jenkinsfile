@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'MAVEN_VERSION',
+            choices: ['M3'],
+            description: 'Selecciona la versión de Maven'
+        )
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['DEV', 'UAT', 'PROD'],
+            description: 'Select environment for deployment'
+        )
+
+        string(
+            name: 'DEPLOYMENT_NAME',
+            defaultValue: 'mi-deployment',
+            description: 'Deployment Name'
+        )
+    }
+
+    tools {
+        maven "${params.MAVEN_VERSION}"
+    }
+
+    stages {
+        stage("Clean Up") {
+            steps {
+                echo "Cleaning up workspace..."
+                deleteDir()
+            }
+        }
+
+        stage("Clone Repo") {
+            steps {
+                echo "Cloning Repository..."
+                sh "git clone https://github.com/jenkins-docs/simple-java-maven-app.git"
+            }
+        }
+
+        stage("Build") {
+            steps {
+                echo "Building the project with Maven ${params.MAVEN_VERSION}..."
+                dir('simple-java-maven-app') {
+                    sh "mvn clean install"
+                }
+            }
+        }
+
+        stage("Test") {
+            steps {
+                echo "Running tests..."
+                dir('simple-java-maven-app') {
+                    sh "mvn test"
+                }
+            }
+        }
+
+        stage("Confirm Deployment (only for PROD)") {
+            when {
+                expression { return params.ENVIRONMENT == 'PROD' }
+            }
+            steps {
+                script {
+                    input(
+                        id: 'confirmDeploy',
+                        message: "You are about to deploy to *PROD*. Confirm to continue:",
+                        ok: 'Deploy to PROD'
+                    )
+                }
+            }
+        }       
+
+        stage("Deployment") {
+            steps {
+                echo "Proceeding with deployment named '${params.DEPLOYMENT_NAME}'..."
+                // Aquí iría la lógica real de despliegue, como:
+                // sh "./deploy.sh ${params.DEPLOYMENT_NAME}"
+            }
+        }
+    }
+}
