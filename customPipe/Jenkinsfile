@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     parameters {
+        
         choice(
             name: 'MAVEN_VERSION',
             choices: ['M3'],
@@ -15,9 +16,17 @@ pipeline {
 
         string(
             name: 'DEPLOYMENT_NAME',
-            defaultValue: 'mi-deployment',
+            defaultValue: 'defaultDeployment',
             description: 'Deployment Name'
         )
+
+        string(
+            name: 'VERSION',
+            defaultValue: '0.0.0',
+            description: 'Version of the application'
+        )
+
+
     }
 
     tools {
@@ -35,7 +44,7 @@ pipeline {
         stage("Clone Repo") {
             steps {
                 echo "Cloning Repository..."
-                sh "git clone https://github.com/jenkins-docs/simple-java-maven-app.git"
+                git 'https://github.com/jenkins-docs/simple-java-maven-app.git'
             }
         }
 
@@ -57,7 +66,7 @@ pipeline {
             }
         }
 
-        stage("Confirm Deployment (only for PROD)") {
+/*         stage("Confirm Deployment (only for PROD)") {
             when {
                 expression { return params.ENVIRONMENT == 'PROD' }
             }
@@ -65,18 +74,47 @@ pipeline {
                 script {
                     input(
                         id: 'confirmDeploy',
-                        message: "You are about to deploy to *PROD*. Confirm to continue:",
+                        message: "You are about to deploy to *PROD* the '${params.VERSION}'. Confirm to continue:",
                         ok: 'Deploy to PROD'
+                        cancel: 'Abort Deployment to ${params.ENVIRONMENT}',
                     )
                 }
             }
-        }       
+        }  */
+
+        stage("Confirm Deployment (For PROD Only)") {
+            when {
+                expression { return params.ENVIRONMENT == 'PROD' }
+            }
+            steps {
+                script {
+                    def userChoice = input(
+                        message: "You are about to deploy to ${params.ENVIRONMENT} the '${params.VERSION}'. Select Yes/No to continue:",
+                        parameters: [
+                            choice(
+                                name: 'Confirmation',
+                                choices: ['Yes', 'No'],
+                                description: 'Do you want to proceed with the deployment?'
+                            )
+                        ]
+                    )
+
+                    if (userChoice == 'Yes') {
+                        echo "User confirmed deployment to ${params.ENVIRONMENT} - ${params.VERSION}."
+                    } else {
+                        echo "User chose not to proceed with deployment."	
+                        error("Deployment to ${params.ENVIRONMENT} - ${params.VERSION} was cancelled by the user.")
+                        currentBuild.result = 'ABORTED'
+                    }	
+                }
+            }
+        }
 
         stage("Deployment") {
             steps {
-                echo "Proceeding with deployment named '${params.DEPLOYMENT_NAME}'..."
+                echo "Proceeding with deployment ${params.DEPLOYMENT_NAME} - Version: ${params.VERSION} to ${params.ENVIRONMENT} environment..."
                 // Aquí iría la lógica real de despliegue, como:
-                // sh "./deploy.sh ${params.DEPLOYMENT_NAME}"
+                // sh "./deploy.sh ${params.DEPLOYMENT_NAME} ${params.VERSION} ${params.ENVIRONMENT}"
             }
         }
     }
