@@ -5,7 +5,7 @@ pipeline {
         choice(
             name: 'MAVEN_VERSION',
             choices: ['M3'],
-            description: 'Selecciona la versión de Maven'
+            description: 'Select Maven version for the build'
         )
         choice(
             name: 'ENVIRONMENT',
