@@ -42,8 +42,8 @@ pipeline {
         }
 
         
-        // This stage is used to clone the repository containing the project manually if you are not using a Jenkinsfile from SCM
-        // If you are using a Jenkinsfile from SCM, this stage can be removed
+        // This stage is used to clone the repository containing the project manually if you are not using a "Jenkinsfile from SCM"
+        // If you are using a "Jenkinsfile from SCM", this stage can be removed
 
         stage("Clone Repo") {
             steps {
@@ -52,10 +52,10 @@ pipeline {
             }
         }
 
-        // This stage is used to checkout the SCM repository if you are using a Jenkinsfile from SCM
-        // If you are not using a Jenkinsfile from SCM, this stage can be removed
-        // If you are using a Jenkinsfile from SCM, this stage will automatically checkout the repository
-        /* stage("Checkout") {
+        // This stage is used to checkout the SCM repository if you are using a "Jenkinsfile from SCM"
+        // If you are not using a "Jenkinsfile from SCM", this stage can be removed
+        // If you are using a "Jenkinsfile from SCM", this stage will automatically checkout the repository
+        /* stage("Checkout and Clone") {
             steps {
             echo "Checking out SCM..."
             checkout scm
@@ -71,15 +71,53 @@ pipeline {
             }
         }
 
-        stage("Test") {
+        // Example of a parallel stage for running tests
+        stage("Tests") {
+            // You can use "parallel" to run unit and integration tests in parallel
+            // This is an example of how to run unit and integration tests in parallel
+            parallel {
+                stage("Unit Tests") {
+                    steps {
+                        echo "Running unit tests..."
+                        dir('simple-java-maven-app') {
+                            sh "mvn test"
+                        }
+                    }
+                }
+                stage("Integration Tests") {
+                    steps {
+                        echo "Running integration tests..."
+                        dir('simple-java-maven-app') {
+                            sh "mvn verify"
+                        }
+                    }
+                }
+            }
+
+        }
+
+                // Individual test stage
+/*         stage("Unit Tests") {
             steps {
-                echo "Running tests..."
+                echo "Running unit tests..."
                 dir('simple-java-maven-app') {
                     sh "mvn test"
                 }
             }
         }
 
+        // Individual integration test stage
+        stage("Integration Tests") {
+            steps {
+                echo "Running integration tests..."
+                dir('simple-java-maven-app') {
+                    sh "mvn verify"
+                }
+            }
+        } */
+            
+            // This stage is used to click build in the Jenkins UI in order to move forward
+            // This will be a simple option to click "Build Now" in the Jenkins UI when it comes to this stage
 /*         stage("Confirm Deployment (only for PROD)") {
             when {
                 expression { return params.ENVIRONMENT == 'PROD' }
@@ -96,6 +134,8 @@ pipeline {
             }
         }  */
 
+        // This stage is used to click build in the Jenkins UI in order to move forward
+        // this will force the user to select build in the Jenkins UI when it comes to this stage
         stage("Confirm Deployment (For PROD Only)") {
             when {
                 expression { return params.ENVIRONMENT == 'PROD' }
