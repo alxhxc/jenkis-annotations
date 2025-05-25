@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/alxhxc/spock-lizard-docker.git'
+        DOCKERHUB_AUTH_TOKEN = credentials('dockerhub-token')
     }
 
     parameters { 
@@ -78,7 +79,18 @@ pipeline {
                     }
                 }
             }
-        }
+
+        // Using a different approach to push the Docker image using a docker hub t
+/*         stage('Push Docker Image') {
+            steps {
+            script {
+                sh "echo Pushing Docker Image to Docker Hub..."
+                sh "echo ${DOCKERHUB_AUTH_TOKEN} | docker login -u ${params.USER} --password-stdin"
+                sh "docker push ${params.USER}/spock-lizard-docker:${params.VERSION}"
+            }
+            }
+        } */
+}
     }
 
     post {
