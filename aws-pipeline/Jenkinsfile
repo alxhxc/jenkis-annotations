@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+
+        stage('AWS S3 Interaction') {
+
+            enmvironment {
+                AWS_S3_BUCKET = 'leanr-jenkins-20250526'
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'jenkins-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    // some block
+                    echo "AWS Access Key ID: ${AWS_ACCESS_KEY_ID}"
+                    // You can add AWS CLI commands here to interact with AWS services
+                    sh '''
+                    aws s3 ls
+                    aws s3 cp /tmp/aws_test.txt s3://${AWS_S3_BUCKET}/test.txt
+                    '''
+                    }
+                }
+            }
+        }
+    }
+}
