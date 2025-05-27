@@ -1,31 +1,112 @@
 pipeline {
     agent any
 
+    environment {
+        GIT_REPO = 'https://github.com/alxhxc/spock-lizard-docker.git'
+        IMAGE_VERSION = "v1.0.${BUILD_NUMBER}"
+    }
+
+    parameters {
+
+        choice(
+            name: 'MAVEN_VERSION',
+            choices: ['M3'],
+            description: 'Select Maven version for the build'
+        )
+
+        choice(
+            name: 'USER',
+            choices: ['alxhxc', 'alex.hlt-doNotUse', 'chikibby-doNotUse'],
+            description: 'Select the Docker Repository user'
+        )
+
+        choice(
+            name: 'AWS_REGION',
+            choices: ['us-east-1', 'us-west-2', 'eu-west-1', 'sa-east-1'],
+            description: 'Select the AWS region for ECR'
+        )
+
+        choice(
+            name: 'AWS_ID',
+            choices: ['994728658023', '123456789012'],
+            description: 'Select the AWS Account ID'
+        )
+
+        choice(
+            name: 'AWS_ECR_REPO',
+            choices: ['alxhxc', 'alex.hlt-doNotUse', 'chikibby-doNotUse'],
+            description: 'Select the AWS ECR Repository'
+        )
+    }
+
+    tools {
+        maven "${params.MAVEN_VERSION}"
+    }
+
     stages {
-        stage('Build') {
+
+        stage('Clean Workspace') {
             steps {
-                echo 'Building...'
+                deleteDir()
             }
         }
 
-        stage('AWS S3 Interaction') {
-
-            enmvironment {
-                AWS_S3_BUCKET = 'leanr-jenkins-20250526'
+        stage('Clone Repository') {
+            steps {
+                git "${GIT_REPO}"
             }
+        }
+
+        stage('Compile and Test') {
+            steps {
+                sh "mvn clean compile test"
+            }
+        }
+
+        stage('Build Spring Boot JAR File') {
+            steps {
+                sh "mvn clean package spring-boot:repackage"
+            }
+        }
+
+        stage('Login to AWS ECR') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'jenkins-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    // some block
-                    echo "AWS Access Key ID: ${AWS_ACCESS_KEY_ID}"
-                    // You can add AWS CLI commands here to interact with AWS services
-                    sh '''
-                    aws s3 ls
-                    aws s3 cp /tmp/aws_test.txt s3://${AWS_S3_BUCKET}/test.txt
-                    '''
+                        sh """
+                            aws ecr get-login-password --region ${params.AWS_REGION} | \
+                            docker login --username AWS --password-stdin ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com
+                        """
                     }
                 }
             }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh """
+                        docker build -t ${params.USER}/spock-lizard-docker:${IMAGE_VERSION} .
+                        docker tag ${params.USER}/spock-lizard-docker:${IMAGE_VERSION} ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}/spock-lizard-docker:${IMAGE_VERSION}
+                    """
+                }
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                script {
+                    sh """
+                        docker push ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}/spock-lizard-docker:${IMAGE_VERSION}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }

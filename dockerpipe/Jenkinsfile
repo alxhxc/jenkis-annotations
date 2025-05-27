@@ -64,7 +64,7 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image to DockerHub') {
+        stage('Push Docker Image') {
             steps {
                 script {
                     // With Docker Plugin
@@ -80,7 +80,7 @@ pipeline {
                 }
             }
 
-        // Using a different approach to push the Docker image using a docker hub token
+        // Using a different approach to push the Docker image using a docker hub t
 /*         stage('Push Docker Image') {
             steps {
             script {
