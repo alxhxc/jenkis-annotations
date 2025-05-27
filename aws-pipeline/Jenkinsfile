@@ -87,7 +87,7 @@ pipeline {
                 script {
                     sh """
                         docker build -t ${params.USER}/spock-lizard-docker:${IMAGE_VERSION} .
-                        docker tag ${params.USER}/spock-lizard-docker:${IMAGE_VERSION} ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}/spock-lizard-docker:${IMAGE_VERSION}
+                        docker tag ${params.USER}/spock-lizard-docker:${IMAGE_VERSION} ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}:${IMAGE_VERSION}
                     """
                 }
             }
@@ -97,7 +97,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker push ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}/spock-lizard-docker:${IMAGE_VERSION}
+                        docker push ${params.AWS_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.AWS_ECR_REPO}:${IMAGE_VERSION}
                     """
                 }
             }
