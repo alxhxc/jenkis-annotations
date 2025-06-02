@@ -8,6 +8,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/alxhxc/spock-lizard-docker.git'
         DOCKERHUB_AUTH_TOKEN = credentials('dockerhub-token')
+        VERSION = "v${BUILD_NUMBER}"
     }
 
     parameters { 
@@ -16,12 +17,6 @@ pipeline {
             name: 'USER',
             choices: ['alxhxc', 'alex.hlt-doNotUse', 'chikibby'],
             description: 'Select the Docker Repository user'
-        )
-
-        string(
-            name: 'VERSION',
-            defaultValue: 'latest',
-            description: 'Version of the Docker image'
         )
     }
 
@@ -59,7 +54,7 @@ pipeline {
                     /* dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}") */
 
                     // Without Docker Plugin
-                    sh "docker build -t ${params.USER}/spock-lizard-docker:${params.VERSION} ."
+                    sh "docker build -t ${params.USER}/spock-lizard-docker:${VERSION} ."
                 }
             }
         }
@@ -75,7 +70,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh "echo Pushing Docker Image to Docker Hub..."
                         sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-                        sh "docker push ${params.USER}/spock-lizard-docker:${params.VERSION}"
+                        sh "docker push ${params.USER}/spock-lizard-docker:${VERSION}"
                     }
                 }
             }
@@ -86,7 +81,7 @@ pipeline {
             script {
                 sh "echo Pushing Docker Image to Docker Hub..."
                 sh "echo ${DOCKERHUB_AUTH_TOKEN} | docker login -u ${params.USER} --password-stdin"
-                sh "docker push ${params.USER}/spock-lizard-docker:${params.VERSION}"
+                sh "docker push ${params.USER}/spock-lizard-docker:${VERSION}"
             }
             }
         } */
